@@ -1,0 +1,764 @@
+## Recommended architecture
+
+```text
+                    ┌──────────────────────┐
+                    │      Next.js         │
+                    │      Frontend        │
+                    │                      │
+                    │ • Landing Page       │
+                    │ • Auth UI            │
+                    │ • Student Dashboard  │
+                    │ • Profile            │
+                    │ • Payments UI        │
+                    │ • Admin Dashboard    │
+                    └──────────┬───────────┘
+                               │
+                         REST API / JSON
+                               │
+                    ┌──────────▼───────────┐
+                    │    Python Backend    │
+                    │     FastAPI          │
+                    │                      │
+                    │ • Authentication     │
+                    │ • User Management    │
+                    │ • Core LM Logic      │
+                    │ • Payments           │
+                    │ • Webhooks            │
+                    │ • Admin APIs          │
+                    │ • Validation         │
+                    │ • Rate Limiting      │
+                    └──────────┬───────────┘
+                               │
+              ┌────────────────┼────────────────┐
+              │                │                │
+       ┌──────▼──────┐ ┌──────▼──────┐ ┌──────▼──────┐
+       │   MongoDB   │ │   Gateway   │ │  LM / AI    │
+       │             │ │             │ │   Service   │
+       │ Users       │ │ Payments    │ │             │
+       │ Sessions    │ │ Subscriptions│ │ Model/API  │
+       │ Usage       │ │ Webhooks    │ │ Processing  │
+       │ Payments    │ │ Refunds     │ │             │
+       └─────────────┘ └─────────────┘ └─────────────┘
+```
+
+### Suggested stack
+
+**Frontend**
+
+* Next.js
+* TypeScript
+* Tailwind CSS
+* React
+* API client
+* Form validation
+
+**Backend**
+
+* Python
+* FastAPI
+* Pydantic
+* JWT/session authentication
+* MongoDB driver
+* Background tasks where needed
+
+**Database**
+
+* MongoDB
+* Separate collections for users, sessions, payments, subscriptions, usage, etc.
+
+**Infrastructure**
+
+* Git/GitHub
+* `.env` configuration
+* Docker
+* CI/CD
+* Production deployment
+* Logging
+* Error monitoring
+
+---
+
+# 60-Day Development Plan
+
+## Phase 1: Foundation — Days 1–5
+
+### Day 1 — Project architecture
+
+* Finalise application requirements
+* Define user roles
+* Define frontend/backend responsibilities
+* Define API structure
+* Define database structure
+* Define authentication flow
+* Define payment flow
+* Create Git repository
+* Create development branches
+
+### Day 2 — Repository setup
+
+Create the project structure:
+
+```text
+student-lm/
+│
+├── frontend/
+│   ├── app/
+│   ├── components/
+│   ├── hooks/
+│   ├── lib/
+│   └── services/
+│
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── core/
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   ├── repositories/
+│   │   └── utils/
+│   ├── tests/
+│   └── requirements.txt
+│
+├── docker/
+├── docs/
+└── README.md
+```
+
+### Day 3 — Next.js foundation
+
+* Create Next.js application
+* Configure TypeScript
+* Configure Tailwind
+* Create global layout
+* Create navigation
+* Create basic page structure
+* Configure environment variables
+
+### Day 4 — FastAPI foundation
+
+* Create FastAPI application
+* Configure routers
+* Configure CORS
+* Configure environment variables
+* Create health endpoint
+* Create API versioning
+
+Example:
+
+```text
+/api/v1/auth
+/api/v1/users
+/api/v1/students
+/api/v1/lm
+/api/v1/payments
+/api/v1/subscriptions
+/api/v1/admin
+```
+
+### Day 5 — MongoDB integration
+
+* Connect Python backend to MongoDB
+* Configure development database
+* Create database abstraction
+* Create indexes
+* Test CRUD operations
+* Add connection/error handling
+
+---
+
+# Phase 2: Authentication — Days 6–12
+
+### Day 6
+
+* User model
+* User roles
+* Registration API
+* Password hashing
+
+### Day 7
+
+* Login API
+* Authentication tokens
+* Token validation
+* Logout mechanism
+
+### Day 8
+
+* Next.js registration page
+* Login page
+* Form validation
+* Error handling
+
+### Day 9
+
+* Frontend authentication state
+* Protected routes
+* Dashboard redirection
+* Session persistence
+
+### Day 10
+
+* Forgot password
+* Reset password
+* Email verification flow
+
+### Day 11
+
+* Student profile
+* Profile update API
+* Profile page
+* Account settings
+
+### Day 12
+
+* Authentication testing
+* Invalid credentials
+* Expired sessions
+* Protected endpoint testing
+* Security review
+
+---
+
+# Phase 3: Core Student System — Days 13–20
+
+This is where the actual **student platform** starts taking shape.
+
+### Day 13
+
+* Student dashboard architecture
+* Dashboard API
+* Dashboard layout
+
+### Day 14
+
+* Student data model
+* Student preferences
+* Academic/user information
+
+### Day 15
+
+* Core LM functionality
+* Backend service architecture
+* Request/response schema
+* LM processing endpoint
+
+### Day 16
+
+* Frontend LM interface
+* Input interface
+* Output interface
+* Loading states
+
+### Day 17
+
+* Conversation/session system
+* Create session
+* Save session
+* Retrieve previous sessions
+
+### Day 18
+
+* MongoDB conversation storage
+* Message structure
+* Usage tracking
+
+### Day 19
+
+* Student history
+* Search/filter
+* Delete/archive functionality
+
+### Day 20
+
+* Integrate frontend with complete backend flow
+* Test end-to-end student workflow
+
+---
+
+# Phase 4: Gateway & Payments — Days 21–28
+
+This should be treated as its own subsystem.
+
+### Day 21 — Payment architecture
+
+Define:
+
+```text
+User
+ ↓
+Select Plan
+ ↓
+Create Payment
+ ↓
+Payment Gateway
+ ↓
+Payment Success/Failure
+ ↓
+Webhook
+ ↓
+Backend Verification
+ ↓
+Subscription Update
+ ↓
+User Access
+```
+
+Do **not** rely only on the frontend success page to activate a subscription. The backend should verify the transaction/webhook.
+
+### Day 22
+
+* Gateway SDK/API integration
+* Environment configuration
+* Merchant/test credentials
+* Payment service
+
+### Day 23
+
+* Create payment API
+* Payment order creation
+* Payment records in MongoDB
+
+### Day 24
+
+* Frontend pricing page
+* Plan selection
+* Checkout interface
+
+### Day 25
+
+* Payment success flow
+* Payment failure flow
+* Cancelled payment flow
+
+### Day 26
+
+* Webhook endpoint
+* Signature verification
+* Duplicate webhook protection
+* Transaction status updates
+
+### Day 27
+
+* Subscription system
+* Subscription start/end
+* Active/inactive states
+* Plan restrictions
+
+### Day 28
+
+* Refund handling
+* Payment history
+* Invoice/receipt data
+* Full payment testing
+
+---
+
+# Phase 5: Usage & Access Control — Days 29–34
+
+### Day 29
+
+* Free vs paid access
+* Feature permissions
+* Backend authorisation middleware
+
+### Day 30
+
+* Usage tracking
+* Daily/monthly limits
+* Request counting
+
+Example:
+
+```text
+User
+ ├── Plan
+ ├── Monthly limit
+ ├── Used requests
+ └── Remaining requests
+```
+
+### Day 31
+
+* Usage dashboard
+* Remaining quota
+* Usage history
+
+### Day 32
+
+* Subscription expiry handling
+* Grace period logic
+* Access revocation
+
+### Day 33
+
+* Admin override system
+* Manual subscription activation
+* Manual suspension
+
+### Day 34
+
+* Security testing
+* Attempted access without subscription
+* Attempted API abuse
+* Rate-limit testing
+
+---
+
+# Phase 6: Admin Panel — Days 35–41
+
+### Day 35
+
+* Admin authentication
+* Admin role
+* Admin dashboard architecture
+
+### Day 36
+
+* User management
+* Search users
+* View users
+* Suspend/activate users
+
+### Day 37
+
+* Subscription management
+* View subscriptions
+* Payment status
+* Plan management
+
+### Day 38
+
+* Usage analytics
+* Requests
+* Active users
+* Subscription statistics
+
+### Day 39
+
+* Payment dashboard
+* Successful payments
+* Failed payments
+* Refunds
+* Revenue information
+
+### Day 40
+
+* System monitoring dashboard
+* API errors
+* Recent activity
+* Service health
+
+### Day 41
+
+* Admin UI polishing
+* Permissions
+* Admin security testing
+
+---
+
+# Phase 7: Core LM Features — Days 42–47
+
+Now make the actual LM experience substantially better.
+
+### Day 42
+
+* Improve prompt/request pipeline
+* Request validation
+* Response handling
+* Error handling
+
+### Day 43
+
+* Conversation management
+* Rename conversations
+* Delete conversations
+* Conversation history
+
+### Day 44
+
+* Student-specific functionality
+* Context handling
+* Personalised responses based on stored user data
+
+### Day 45
+
+* File/input handling if required
+* Upload validation
+* Storage architecture
+* Processing pipeline
+
+### Day 46
+
+* LM usage optimisation
+* Request limits
+* Token/cost tracking
+* Response caching where appropriate
+
+### Day 47
+
+* LM failure handling
+* Timeout handling
+* Retry strategy
+* Fallback responses
+
+---
+
+# Phase 8: Notifications & Supporting Services — Days 48–51
+
+### Day 48
+
+* Email service
+* Verification emails
+* Password reset emails
+* Payment emails
+
+### Day 49
+
+* Subscription notifications
+* Payment failure notifications
+* Subscription expiry notifications
+
+### Day 50
+
+* Notification preferences
+* In-app notifications
+* Notification history
+
+### Day 51
+
+* Background jobs
+* Scheduled tasks
+* Failed-job handling
+
+---
+
+# Phase 9: Security & Testing — Days 52–56
+
+This phase is **very important** for a project containing authentication and payments.
+
+### Day 52 — Backend security
+
+* Input validation
+* Authentication checks
+* Authorisation checks
+* Rate limiting
+* Secure headers
+* Secret management
+
+### Day 53 — Database security
+
+* MongoDB access rules
+* Index optimisation
+* Query validation
+* Data access restrictions
+
+### Day 54 — API testing
+
+Test:
+
+```text
+Authentication
+Users
+Students
+LM
+Payments
+Subscriptions
+Webhooks
+Admin
+Usage
+```
+
+### Day 55 — Frontend testing
+
+* Forms
+* Navigation
+* Protected pages
+* Payment UI
+* Dashboard
+* Error states
+
+### Day 56 — End-to-end testing
+
+Test the complete journey:
+
+```text
+Register
+   ↓
+Verify account
+   ↓
+Login
+   ↓
+Student dashboard
+   ↓
+Use LM
+   ↓
+Reach limit
+   ↓
+Choose subscription
+   ↓
+Payment
+   ↓
+Webhook
+   ↓
+Subscription activated
+   ↓
+Continue using LM
+```
+
+---
+
+# Phase 10: Deployment — Days 57–60
+
+### Day 57 — Production preparation
+
+* Production environment variables
+* MongoDB production database
+* Backend configuration
+* Frontend configuration
+* CORS
+* Domain configuration
+
+### Day 58 — Deploy backend
+
+* Deploy Python/FastAPI backend
+* Configure HTTPS
+* Configure production database
+* Configure gateway
+* Configure webhook URL
+
+### Day 59 — Deploy frontend
+
+* Deploy Next.js
+* Configure API URL
+* Configure authentication
+* Configure production environment
+* Connect frontend and backend
+
+### Day 60 — Final release
+
+Run the complete production checklist:
+
+```text
+✓ Registration
+✓ Login
+✓ Authentication
+✓ Student dashboard
+✓ LM functionality
+✓ MongoDB
+✓ Payment gateway
+✓ Webhooks
+✓ Subscription
+✓ Usage limits
+✓ Admin panel
+✓ Emails
+✓ Error handling
+✓ Security
+✓ Mobile responsiveness
+✓ Production deployment
+```
+
+---
+
+# Final project structure
+
+By Day 60, I would aim for something approximately like:
+
+```text
+student-lm/
+│
+├── frontend/
+│   ├── app/
+│   │   ├── login/
+│   │   ├── register/
+│   │   ├── dashboard/
+│   │   ├── profile/
+│   │   ├── pricing/
+│   │   ├── payment/
+│   │   ├── history/
+│   │   └── admin/
+│   │
+│   ├── components/
+│   ├── hooks/
+│   ├── services/
+│   ├── lib/
+│   └── types/
+│
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── v1/
+│   │   │       ├── auth/
+│   │   │       ├── users/
+│   │   │       ├── students/
+│   │   │       ├── lm/
+│   │   │       ├── payments/
+│   │   │       ├── subscriptions/
+│   │   │       ├── usage/
+│   │   │       └── admin/
+│   │   │
+│   │   ├── core/
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   ├── repositories/
+│   │   ├── middleware/
+│   │   └── utils/
+│   │
+│   ├── tests/
+│   └── requirements.txt
+│
+├── docs/
+│
+├── docker-compose.yml
+├── .gitignore
+└── README.md
+```
+
+## MongoDB collections
+
+I would keep the database modular rather than putting everything into one `users` collection:
+
+```text
+users
+students
+sessions
+conversations
+messages
+plans
+subscriptions
+payments
+transactions
+usage
+notifications
+admin_logs
+webhook_events
+```
+
+The **webhook_events** collection is particularly useful because payment webhooks can sometimes be delivered more than once. You can store the gateway event ID and prevent duplicate processing.
+
+### One important architectural decision
+
+Keep these three things separate:
+
+**Payment**
+
+```text
+Did money move?
+```
+
+**Subscription**
+
+```text
+Does this user currently have access?
+```
+
+**Usage**
+
+```text
+How much has this user consumed?
+```
+
+That separation will make the project much easier to maintain.
+
+For a 60-day build, I would also avoid trying to build every possible feature immediately. **Days 1–41 establish the platform, Days 42–51 make the LM experience complete, Days 52–60 make it production-ready.** This gives you a functioning MVP well before Day 60 rather than discovering integration problems at the end.
