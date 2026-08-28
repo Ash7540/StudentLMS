@@ -1,0 +1,13 @@
+mongouse =ashchavan7540_db_user
+mongopass = QdCLAeKUWJEmnDlC
+
+mongodb+srv://<db_username>:QdCLAeKUWJEmnDlC@studentlms.pssom1y.mongodb.net/
+
+
+Cloudinary = 
+
+cloud name: fesne5tm
+api : 387574296742661
+api secret: McWJQbHptLabQtXRbosc3RgICYo
+
+CLOUDINARY_URL=cloudinary://387574296742661:McWJQbHptLabQtXRbosc3RgICYo@fesne5tm
