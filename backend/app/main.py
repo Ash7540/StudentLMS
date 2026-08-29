@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.config import settings
-from app.core.database import connect_to_mongo, close_mongo_connection
+from app.core.database import connect_to_mongo, close_mongo_connection, init_db_indexes, check_database_health
 from app.api.v1.router import api_router
 from app.utils.logger import logger
 
@@ -17,9 +17,9 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing StudyLMS FastAPI Application...")
     try:
         await connect_to_mongo()
-        logger.info("MongoDB connection pool established.")
+        await init_db_indexes()
     except Exception as e:
-        logger.warning(f"MongoDB connection skipped or failed: {e}")
+        logger.warning(f"MongoDB startup connection attempt encountered exception: {e}")
     yield
     # Shutdown
     logger.info("Shutting down StudyLMS FastAPI Application...")
@@ -100,20 +100,24 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 # System Health Endpoints
 @app.get("/health", tags=["health"])
 async def root_health_check():
+    db_healthy = await check_database_health()
     return {
         "status": "ok",
         "app": settings.PROJECT_NAME,
         "version": settings.VERSION,
+        "database": "connected" if db_healthy else "disconnected",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
 @app.get(f"{settings.API_V1_STR}/health", tags=["health"])
 async def v1_health_check():
+    db_healthy = await check_database_health()
     return {
         "status": "ok",
         "api_version": "v1",
         "app": settings.PROJECT_NAME,
+        "database": "connected" if db_healthy else "disconnected",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
