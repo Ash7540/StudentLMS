@@ -11,10 +11,10 @@ async def test_auth_endpoints():
         # Register
         res = await client.post(
             "/api/v1/auth/register",
-            json={"email": "test@example.com", "password": "pass123456", "full_name": "Test User"},
+            json={"email": "v1_test@example.com", "password": "pass123456", "full_name": "Test User"},
         )
         assert res.status_code == 201
-        assert res.json()["status"] == "success"
+        assert res.json()["email"] == "v1_test@example.com"
 
         # Login
         res = await client.post("/api/v1/auth/login")
