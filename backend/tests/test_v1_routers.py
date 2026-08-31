@@ -17,16 +17,24 @@ async def test_auth_endpoints():
         assert res.json()["email"] == "v1_test@example.com"
 
         # Login
-        res = await client.post("/api/v1/auth/login")
+        res = await client.post(
+            "/api/v1/auth/login",
+            json={"email": "v1_test@example.com", "password": "pass123456"},
+        )
         assert res.status_code == 200
-        assert "access_token" in res.json()
+        token_data = res.json()
+        assert "access_token" in token_data
+        token = token_data["access_token"]
 
-        # Refresh
-        res = await client.post("/api/v1/auth/refresh-token")
-        assert res.status_code == 200
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # Protected Me Route
+        me_res = await client.get("/api/v1/auth/me", headers=headers)
+        assert me_res.status_code == 200
+        assert me_res.json()["email"] == "v1_test@example.com"
 
         # Logout
-        res = await client.post("/api/v1/auth/logout")
+        res = await client.post("/api/v1/auth/logout", headers=headers)
         assert res.status_code == 200
 
 
