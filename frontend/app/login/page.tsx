@@ -2,21 +2,68 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { GraduationCap, Mail, Lock, Eye, EyeOff, ArrowRight, Github } from "lucide-react";
+import { authService } from "@/services/auth.service";
+import { Alert } from "@/components/ui/alert";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Validation & API status state
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = () => {
+    let isValid = true;
+    setEmailError("");
+    setPasswordError("");
+    setApiError("");
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      setEmailError("Email address is required.");
+      isValid = false;
+    } else if (!emailRegex.test(email.trim())) {
+      setEmailError("Please enter a valid email address.");
+      isValid = false;
+    }
+
+    if (!password) {
+      setPasswordError("Password is required.");
+      isValid = false;
+    } else if (password.length < 8) {
+      setPasswordError("Password must be at least 8 characters long.");
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      window.location.href = "/dashboard";
-    }, 1000);
+    setApiError("");
+
+    const res = await authService.login({
+      email: email.trim(),
+      password,
+    });
+
+    setLoading(false);
+
+    if (res.success) {
+      router.push("/dashboard");
+    } else {
+      setApiError(res.error || "Incorrect email address or password.");
+    }
   };
 
   return (
@@ -40,9 +87,19 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {/* Banner Alert for API Errors */}
+        {apiError && (
+          <Alert
+            variant="error"
+            title="Authentication Failed"
+            message={apiError}
+            onClose={() => setApiError("")}
+          />
+        )}
+
         {/* Card Form */}
         <div className="p-8 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl shadow-2xl space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             {/* Email Field */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
@@ -54,13 +111,22 @@ export default function LoginPage() {
                 </div>
                 <input
                   type="email"
-                  required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError("");
+                  }}
                   placeholder="student@university.edu"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 transition"
+                  className={`w-full pl-11 pr-4 py-3 rounded-xl bg-slate-950/60 border text-white placeholder-slate-500 text-sm focus:outline-none transition ${
+                    emailError
+                      ? "border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                      : "border-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  }`}
                 />
               </div>
+              {emailError && (
+                <p className="mt-1.5 text-xs text-rose-400 font-medium">{emailError}</p>
+              )}
             </div>
 
             {/* Password Field */}
@@ -79,11 +145,17 @@ export default function LoginPage() {
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
-                  required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) setPasswordError("");
+                  }}
                   placeholder="••••••••••••"
-                  className="w-full pl-11 pr-11 py-3 rounded-xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 transition"
+                  className={`w-full pl-11 pr-11 py-3 rounded-xl bg-slate-950/60 border text-white placeholder-slate-500 text-sm focus:outline-none transition ${
+                    passwordError
+                      ? "border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                      : "border-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  }`}
                 />
                 <button
                   type="button"
@@ -93,13 +165,16 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+              {passwordError && (
+                <p className="mt-1.5 text-xs text-rose-400 font-medium">{passwordError}</p>
+              )}
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 shadow-lg shadow-sky-500/25 transition-all flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 disabled:opacity-50 shadow-lg shadow-sky-500/25 transition-all flex items-center justify-center gap-2"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

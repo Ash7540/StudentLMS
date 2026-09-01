@@ -2,22 +2,102 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { GraduationCap, Mail, Lock, User, Sparkles, CheckCircle2, ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { GraduationCap, Mail, Lock, User, Sparkles, Eye, EyeOff, CheckCircle2, ArrowRight } from "lucide-react";
+import { authService } from "@/services/auth.service";
+import { Alert } from "@/components/ui/alert";
 
 export default function RegisterPage() {
+  const router = useRouter();
+
+  // Form State
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState<"student" | "educator">("student");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Field Errors & Status State
+  const [nameError, setNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmError, setConfirmError] = useState("");
+  const [termsError, setTermsError] = useState("");
+  const [apiError, setApiError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = () => {
+    let isValid = true;
+    setNameError("");
+    setEmailError("");
+    setPasswordError("");
+    setConfirmError("");
+    setTermsError("");
+    setApiError("");
+
+    if (!fullName.trim() || fullName.trim().length < 2) {
+      setNameError("Full name must be at least 2 characters long.");
+      isValid = false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      setEmailError("Email address is required.");
+      isValid = false;
+    } else if (!emailRegex.test(email.trim())) {
+      setEmailError("Please enter a valid email address.");
+      isValid = false;
+    }
+
+    if (!password) {
+      setPasswordError("Password is required.");
+      isValid = false;
+    } else if (password.length < 8) {
+      setPasswordError("Password must be at least 8 characters long.");
+      isValid = false;
+    }
+
+    if (password !== confirmPassword) {
+      setConfirmError("Passwords do not match.");
+      isValid = false;
+    }
+
+    if (!termsAccepted) {
+      setTermsError("You must agree to the Terms of Service & Privacy Policy.");
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      window.location.href = "/dashboard";
-    }, 1000);
+    setApiError("");
+    setSuccessMsg("");
+
+    const res = await authService.register({
+      full_name: fullName.trim(),
+      email: email.trim(),
+      password,
+      role: role,
+    });
+
+    setLoading(false);
+
+    if (res.success) {
+      setSuccessMsg("Account created successfully! Redirecting to login...");
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
+    } else {
+      setApiError(res.error || "Registration failed. Please try again.");
+    }
   };
 
   return (
@@ -38,6 +118,24 @@ export default function RegisterPage() {
             Start your AI-powered learning journey today
           </p>
         </div>
+
+        {/* Banner Alert Feedback */}
+        {apiError && (
+          <Alert
+            variant="error"
+            title="Registration Failed"
+            message={apiError}
+            onClose={() => setApiError("")}
+          />
+        )}
+
+        {successMsg && (
+          <Alert
+            variant="success"
+            title="Success!"
+            message={successMsg}
+          />
+        )}
 
         <div className="p-8 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl shadow-2xl space-y-6">
           {/* Role selector tabs */}
@@ -66,7 +164,7 @@ export default function RegisterPage() {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {/* Full Name */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
@@ -78,13 +176,22 @@ export default function RegisterPage() {
                 </div>
                 <input
                   type="text"
-                  required
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                    if (nameError) setNameError("");
+                  }}
                   placeholder="Jane Student"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 transition"
+                  className={`w-full pl-11 pr-4 py-3 rounded-xl bg-slate-950/60 border text-white placeholder-slate-500 text-sm focus:outline-none transition ${
+                    nameError
+                      ? "border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                      : "border-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  }`}
                 />
               </div>
+              {nameError && (
+                <p className="mt-1 text-xs text-rose-400 font-medium">{nameError}</p>
+              )}
             </div>
 
             {/* Email */}
@@ -98,13 +205,22 @@ export default function RegisterPage() {
                 </div>
                 <input
                   type="email"
-                  required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError("");
+                  }}
                   placeholder="jane@university.edu"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 transition"
+                  className={`w-full pl-11 pr-4 py-3 rounded-xl bg-slate-950/60 border text-white placeholder-slate-500 text-sm focus:outline-none transition ${
+                    emailError
+                      ? "border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                      : "border-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  }`}
                 />
               </div>
+              {emailError && (
+                <p className="mt-1 text-xs text-rose-400 font-medium">{emailError}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -117,34 +233,88 @@ export default function RegisterPage() {
                   <Lock className="w-5 h-5" />
                 </div>
                 <input
-                  type="password"
-                  required
+                  type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) setPasswordError("");
+                  }}
                   placeholder="At least 8 characters"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-950/60 border border-slate-800 text-white placeholder-slate-500 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 transition"
+                  className={`w-full pl-11 pr-11 py-3 rounded-xl bg-slate-950/60 border text-white placeholder-slate-500 text-sm focus:outline-none transition ${
+                    passwordError
+                      ? "border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                      : "border-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-white"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {passwordError && (
+                <p className="mt-1 text-xs text-rose-400 font-medium">{passwordError}</p>
+              )}
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (confirmError) setConfirmError("");
+                  }}
+                  placeholder="Re-enter your password"
+                  className={`w-full pl-11 pr-4 py-3 rounded-xl bg-slate-950/60 border text-white placeholder-slate-500 text-sm focus:outline-none transition ${
+                    confirmError
+                      ? "border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                      : "border-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  }`}
                 />
               </div>
+              {confirmError && (
+                <p className="mt-1 text-xs text-rose-400 font-medium">{confirmError}</p>
+              )}
             </div>
 
             {/* Terms checkbox */}
-            <div className="flex items-center gap-2 pt-2">
-              <input
-                type="checkbox"
-                required
-                id="terms"
-                className="w-4 h-4 rounded border-slate-800 bg-slate-950 text-sky-500 focus:ring-sky-500"
-              />
-              <label htmlFor="terms" className="text-xs text-slate-400">
-                I agree to the <a href="#" className="text-sky-400 hover:underline">Terms of Service</a> & <a href="#" className="text-sky-400 hover:underline">Privacy Policy</a>
-              </label>
+            <div className="pt-1 space-y-1">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={termsAccepted}
+                  onChange={(e) => {
+                    setTermsAccepted(e.target.checked);
+                    if (termsError) setTermsError("");
+                  }}
+                  className="w-4 h-4 rounded border-slate-800 bg-slate-950 text-sky-500 focus:ring-sky-500"
+                />
+                <label htmlFor="terms" className="text-xs text-slate-400">
+                  I agree to the <a href="#" className="text-sky-400 hover:underline">Terms of Service</a> & <a href="#" className="text-sky-400 hover:underline">Privacy Policy</a>
+                </label>
+              </div>
+              {termsError && (
+                <p className="text-xs text-rose-400 font-medium">{termsError}</p>
+              )}
             </div>
 
             {/* Submit button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 shadow-lg shadow-sky-500/25 transition-all flex items-center justify-center gap-2 mt-4"
+              className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 disabled:opacity-50 shadow-lg shadow-sky-500/25 transition-all flex items-center justify-center gap-2 mt-4"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
